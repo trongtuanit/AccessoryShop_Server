@@ -1,13 +1,15 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-
 const configuration = require("../configs/configuration");
-
 const User = require("../models/User.model");
-
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
+const ResponseError = require("../helpers/ResponseError");
 
 
+/*
+  method: GET
+  body: { username, password }
+*/
 module.exports.login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -35,27 +37,37 @@ module.exports.login = async (req, res) => {
     username,
     name: user.name,
     email: user.email,
-    phoneNumber: user.phoneNumber
+    phoneNumber: user.phoneNumber,
   });
 };
 
 
+/*
+  method: POST
+  body: { name, username, password, email, phoneNumber }
+*/
 module.exports.signUp = async (req, res, next) => {
   const user = new User(req.body);
 
   // check data
-  if(!(user.username && user.email && user.password && user.name && user.phoneNumber)) 
-    return next(new ErrorResponse(400, 'Missing information')); 
+  if (
+    !(
+      user.username &&
+      user.email &&
+      user.password &&
+      user.name &&
+      user.phoneNumber
+    )
+  )
+    return next(new ResponseError(400, "Missing information"));
 
   // is email taken
   const emailTaken = await User.findOne({ email });
-  if(emailTaken) 
-    return next(new ErrorResponse(400, 'Email is taken'));
-  
+  if (emailTaken) return next(new ResponseError(400, "Email is taken"));
+
   // is username taken
   const userExist = await User.findOne({ username });
-  if(userExist) 
-    return next(new ErrorResponse(400, 'Username is taken'));
+  if (userExist) return next(new ResponseError(400, "Username is taken"));
 
   const newUser = await user.save();
 
@@ -64,7 +76,12 @@ module.exports.signUp = async (req, res, next) => {
     .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
 };
 
-// Validate token
+
+/*
+  method: POST
+  body : { jwt }
+  desc: check is token valid and return user infomation witch a new token that expired in 7 days
+*/
 module.exports.validateToken = async (req, res) => {
   const token = req.body.jwt;
 
@@ -92,6 +109,6 @@ module.exports.validateToken = async (req, res) => {
     username: currentUser.username,
     name: user.name,
     email: user.email,
-    phoneNumber: user.phoneNumber
+    phoneNumber: user.phoneNumber,
   });
 };

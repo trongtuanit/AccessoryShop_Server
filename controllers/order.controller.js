@@ -7,13 +7,19 @@ const Cart = require("../models/Cart");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
+
+/*
+  method: GET
+  params: userId
+  body: { address, phoneNumber, carts }
+*/
 module.exports.addOrder = async (req, res, next) => {
-  const userId = req.userId;
+  const userId = req.params.userId;
   const { address, phoneNumber, carts } = req.body;
 
   if (!(address && phoneNumber && carts)) {
     return next(
-      new ErrorResponse(HttpStatus.BAD_REQUEST, "Missing information")
+      new ResponseError(HttpStatus.BAD_REQUEST, "Missing information")
     );
   }
 
@@ -28,7 +34,7 @@ module.exports.addOrder = async (req, res, next) => {
       await session.abortTransaction();
       session.endSession();
 
-      return next(new ErrorResponse(HttpStatus.NOT_FOUND, "User not found"));
+      return next(new ResponseError(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     // Check for existing product in user's cart and delete them
@@ -92,7 +98,7 @@ module.exports.addOrder = async (req, res, next) => {
       session.endSession();
 
       return next(
-        new ErrorResponse(HttpStatus.BAD_REQUEST, "Receiver not found")
+        new ResponseError(HttpStatus.BAD_REQUEST, "Receiver not found")
       );
     }
 
@@ -132,8 +138,13 @@ module.exports.addOrder = async (req, res, next) => {
   }
 };
 
+
+/*
+  params: userId
+  method: GET
+*/
 module.exports.getOrderUser = async (req, res) => {
-  const userId = req.userId;
+  const userId = req.params.userId;
 
   const orders = await Order.find({ user: userId })
     .populate({ path: "orderDetails", populate: "product" })
@@ -144,6 +155,10 @@ module.exports.getOrderUser = async (req, res) => {
     .json(new ResponseEntity(HttpStatus.OK), Message.SUCCESS, orders);
 };
 
+
+/*
+  method: GET
+*/
 module.exports.getAllOrders = async (req, res) => {
   const orders = await Order.find({})
     .populate({ path: "orderDetails", populate: "product" })
@@ -154,6 +169,10 @@ module.exports.getAllOrders = async (req, res) => {
     .json(new ResponseEntity(HttpStatus.OK), Message.SUCCESS, orders);
 };
 
+/*
+  method: GET
+  params: orderId
+*/
 module.exports.getOrderById = async (req, res) => {
   const { orderId } = req.params;
 

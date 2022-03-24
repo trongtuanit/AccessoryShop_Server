@@ -1,6 +1,10 @@
 const User = require("../models/User.model");
 const { ResponseEntity, HttpStatus, Message } = require("../dto/dataResponse");
+const ResponseError = require("../helpers/ResponseError");
 
+/* 
+  method: GET 
+*/
 module.exports.getAllUsers = async (req, res) => {
   const users = await User.find();
 
@@ -15,6 +19,10 @@ module.exports.getAllUsers = async (req, res) => {
     .json(new ResponseEntity(HttpStatus.Ok, Message.SUCCESS, users));
 };
 
+/*
+  method: GET
+  params: userId
+*/
 module.exports.getUserById = async (req, res) => {
   const { userId } = req.params;
   const user = await User.findById(userId);
@@ -29,12 +37,15 @@ module.exports.getUserById = async (req, res) => {
         )
       );
   }
-
   res
     .status(HttpStatus.OK)
     .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
 };
 
+/*
+  params: username
+  method: GET
+*/
 module.exports.getUserByUsername = async (req, res) => {
   const { username } = req.params;
   const user = await User.find({ username: username });
@@ -54,6 +65,10 @@ module.exports.getUserByUsername = async (req, res) => {
     .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
 };
 
+/*
+  method: POST
+  body: { username, password, email, name, phoneNumber, address }
+*/
 module.exports.createNewUser = async (req, res, next) => {
   const user = new User(req.body);
 
@@ -67,15 +82,15 @@ module.exports.createNewUser = async (req, res, next) => {
       user.phoneNumber
     )
   )
-    return next(new ErrorResponse(400, "Missing information"));
+    return next(new ResponseError(400, "Missing information"));
 
   // is email taken
   const emailTaken = await User.findOne({ email });
-  if (emailTaken) return next(new ErrorResponse(400, "Email is taken"));
+  if (emailTaken) return next(new ResponseError(400, "Email is taken"));
 
   // is username taken
   const userExist = await User.findOne({ username });
-  if (userExist) return next(new ErrorResponse(400, "Username is taken"));
+  if (userExist) return next(new ResponseError(400, "Username is taken"));
 
   const newUser = await user.save();
   res
@@ -83,6 +98,12 @@ module.exports.createNewUser = async (req, res, next) => {
     .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
 };
 
+
+/*
+  method: PUT
+  params: userId
+  body: { username, password, email, name, phoneNumber, address }
+*/
 module.exports.editUser = async (req, res) => {
   const { userId } = req.params;
   const userBody = { ...req.body };
@@ -111,6 +132,10 @@ module.exports.editUser = async (req, res) => {
     .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
 };
 
+/*
+  method: DELETE
+  params: userId
+*/
 module.exports.deleteUser = async (req, res) => {
   const { userId } = req.params;
 
