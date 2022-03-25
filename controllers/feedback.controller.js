@@ -22,15 +22,11 @@ module.exports.getAllFeedbacksByOderDetailId = async (req, res) => {
 
 /*
   method: POST
-  params: userId
   body: { comment, ratingStar, order_detail_id }
 */
 module.exports.createFeedback = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
   const { comment, ratingStar, order_detail_id } = { ...req.body };
-
-  if (!(comment && ratingStar && order_detail_id && userId))
-    return next(new ResponseError(400, "Missing information"));
 
   const feedback = await Feedback.create({
     comment,
@@ -46,21 +42,15 @@ module.exports.createFeedback = async (req, res, next) => {
 
 /*
   method: PUT
-  query: userId
   body: { comment, ratingStar, order_detail_id }
 */
 module.exports.editFeedback = async (req, res, next) => {
-  const userId = req.query.userId;
-  const { comment, ratingStar, order_detail_id } = { ...req.body };
+  const id = req.params.id;
+  const { comment, ratingStar } = { ...req.body };
 
-  if (!(comment && ratingStar && order_detail_id && userId))
-    return next(new ResponseError(400, "Missing information"));
-
-  const feedback = await Feedback.create({
+  const feedback = await Feedback.findByIdAndUpdate(id, {
     comment,
     ratingStar,
-    orderDetail: order_detail_id,
-    user: userId,
   });
 
   res

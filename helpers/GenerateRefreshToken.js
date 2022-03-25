@@ -1,7 +1,7 @@
 require("dotenv").config();
 const redisClient = require("../config/redis");
 const jwt = require("jsonwebtoken");
-const ErrorResponse = require("./ErrorResponse");
+const ResponseError = require("./ResponseError");
 
 const generateRefreshToken = (userId) => {
   const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
@@ -9,7 +9,7 @@ const generateRefreshToken = (userId) => {
   });
 
   redisClient.set(userId.toString(), refreshToken, function (error) {
-    if (error) return next(new ErrorResponse(400, error.message));
+    if (error) return next(new ResponseError(400, error.message));
 
     console.log("Stored refresh token");
   });

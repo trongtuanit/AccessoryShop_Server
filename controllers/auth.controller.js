@@ -5,10 +5,13 @@ const configuration = require("../configs/configuration");
 const User = require("../models/User.model");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
 const generatePassword = require("../helpers/PasswordGenerator");
+const GenerateRefreshToken = require("../helpers/GenerateRefreshToken");
 const ResponseError = require("../helpers/ResponseError");
+const redisClient = require("../config/redis");
 
 /*
   method: GET
+  path: /login
   body: { username, password }
 */
 module.exports.login = async (req, res) => {
@@ -32,7 +35,16 @@ module.exports.login = async (req, res) => {
     expiresIn: "7d",
   });
 
+  const accessToken = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
+  );
+  const refreshToken = GenerateRefreshToken(user._id);
+
   res.status(HttpStatus.OK).json({
+    accessToken,
+    refreshToken,
     jwt: token,
     userId: user._id,
     username,
@@ -43,6 +55,7 @@ module.exports.login = async (req, res) => {
 };
 
 /*
+  path: ../sign-up
   method: POST
   body: { name, username, password, email, phoneNumber }
 */
@@ -69,13 +82,43 @@ module.exports.signUp = async (req, res, next) => {
 
   const newUser = await user.save();
 
-  res
-    .status(HttpStatus.CREATED)
-    .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
+  const accessToken = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
+  );
+  const refreshToken = GenerateRefreshToken(user._id);
+
+  res.status(HttpStatus.CREATED).json(
+    new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, {
+      accessToken,
+      refreshToken,
+      newUser,
+    })
+  );
 };
 
 /*
-  method: POST
+  method: GET
+  path: .../
+*/
+module.exports.confirmToken = async (req, res, next) => {
+  const userId = req.userId;
+
+  const user = await User.findOne({ _id: userId }).select("-password");
+
+  // Check for existing user
+  if (!user) {
+    return next(new ResponseError(404, "User not exist"));
+  }
+  res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
+};
+
+/*
+  method: PUT
+  path: .../reset-password/:resetToken
   body : { username, email }
 */
 module.exports.resetPassword = async (req, res, next) => {
@@ -112,11 +155,10 @@ module.exports.resetPassword = async (req, res, next) => {
 
 /*
   method: PUT
-  params: userId
+  path: ../
   body: { fullname, phoneNumber, email, address, money = 0, }
 */
 module.exports.updateInfomation = async (req, res, next) => {
-  const userId = req.params.userId;
   const user = await User.findById(req.userId).select("-password");
 
   if (!user) {
@@ -133,9 +175,8 @@ module.exports.updateInfomation = async (req, res, next) => {
 
   if (email !== user.email) {
     const userWithEmail = await User.findOne({ email });
-
     if (userWithEmail)
-      return next(new ErrorResponse(400, "This email is taken"));
+      return next(new ResponseError(400, "This email is taken"));
   }
 
   user.fullname = fullname;
@@ -152,8 +193,8 @@ module.exports.updateInfomation = async (req, res, next) => {
 };
 
 /*
-  method: POST
-  params: userId
+  method: PUT
+  path: .../password
   body: { password, newPassword }
 */
 module.exports.changePassword = async (req, res, next) => {
@@ -197,6 +238,7 @@ module.exports.changePassword = async (req, res, next) => {
 
 /*
   method: POST
+  path: ../validate-token
   body : { jwt }
   desc: check is token valid and return user infomation witch a new token that expired in 7 days
 */
@@ -229,4 +271,53 @@ module.exports.validateToken = async (req, res) => {
     email: user.email,
     phoneNumber: user.phoneNumber,
   });
+};
+
+/*
+  method: POST
+  path: .../token
+  header require: accessToken 
+*/
+module.exports.getAccessToken = (req, res, next) => {
+  const userId = req.userId;
+
+  const user = await User.findOne({ _id: userId });
+
+  // Check for existing user
+  if (!user) {
+    return next(new ResponseError(404, "User not exist"));
+  }
+
+  // Everything is good
+  const accessToken = jwt.sign(
+    { userId, role: user.role },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
+  );
+  const refreshToken = GenerateRefreshToken(userId);
+
+  res.status(HttpStatus.OK).json({
+    accessToken,
+    refreshToken,
+  });
+};
+
+/*
+  method: GET
+  path: .../logout
+*/
+module.exports.logout = async (req, res, next) => {
+  const userId = req.userId;
+
+  const user = await User.findOne({ _id: userId }).select("-password");
+
+  // Check for existing user
+  if (!user) {
+    return next(new ResponseError(404, "User not exist"));
+  }
+
+  await redisClient.del(userId.toString());
+  res
+    .status(HttpStatus.OK)
+    .json(ResponseEntity(HttpStatus.OK, Message.SUCCESS));
 };

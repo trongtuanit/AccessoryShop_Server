@@ -5,14 +5,13 @@ const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
 
 /*  
   method: POST
-  params: userId
   body: { productId, quantity } 
 */
 module.exports.addToCart = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
   const { productId, quantity } = req.body;
 
-  if (!(productId && quantity && userId)) {
+  if (!(productId && quantity)) {
     return next(new ResponseError(400, "Lack of information"));
   }
 
@@ -52,7 +51,7 @@ module.exports.addToCart = async (req, res, next) => {
   params: userId
 */
 module.exports.getCartByUserId = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
 
   const carts = await Cart.find({ user: userId }).popuplate("product");
 
@@ -63,10 +62,10 @@ module.exports.getCartByUserId = async (req, res, next) => {
 
 /* 
   method: DELETE
-  params: /:userId/:id 
+  params: id
 */
 module.exports.deleteCartByUserIdAndId = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
   const id = req.params.id;
 
   const deletedCart = await Cart.findOneAndDelete({ user: userId, _id: id });
@@ -87,12 +86,11 @@ module.exports.deleteCartByUserIdAndId = async (req, res, next) => {
 };
 
 /*  
-  params: userId 
   body: { productId, quantity }
   method: PUT
 */
 module.exports.updateCartByUserId = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
   const { productId, quantity } = req.body;
 
   if (!(productId && quantity)) {
@@ -121,7 +119,7 @@ module.exports.updateCartByUserId = async (req, res, next) => {
 */
 module.exports.updateCarts = async (req, res, next) => {
   const { newCarts } = req.body;
-  // const userId = req.params.userId;
+  const userId = req.userId;
 
   const carts = await Promise.all(
     newCarts.map(async (cart) => {

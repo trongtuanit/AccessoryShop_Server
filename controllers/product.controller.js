@@ -84,7 +84,7 @@ module.exports.getProductById = async (req, res) => {
   method: POST
   body: name, description, price, stock, discount, sold, category, file(product image)
 */
-module.exports.createNewProduct = async (req, res, next) => {
+module.exports.createNewProductWithImage = async (req, res, next) => {
   const product = new Product(req.body);
   const file  = req.file;
   
@@ -111,6 +111,22 @@ module.exports.createNewProduct = async (req, res, next) => {
       }
     );
   }
+  const newProduct = await Product.create(product);
+
+  res
+    .status(HttpStatus.CREATED)
+    .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newProduct));
+};
+
+/*
+  method: POST
+  body: { name, description, price, stock, discount, sold, category }
+*/
+module.exports.createNewProduct = async (req, res, next) => {
+  const product = new Product(req.body);
+  
+  if (!(product.name && product.price && product.stock ))
+    return next(new ResponseError(400, "Missing information"));
   const newProduct = await Product.create(product);
 
   res

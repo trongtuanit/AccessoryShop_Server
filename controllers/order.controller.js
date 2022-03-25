@@ -14,7 +14,7 @@ const Product = require("../models/Product");
   body: { address, phoneNumber, carts }
 */
 module.exports.addOrder = async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
   const { address, phoneNumber, carts } = req.body;
 
   if (!(address && phoneNumber && carts)) {
@@ -144,7 +144,7 @@ module.exports.addOrder = async (req, res, next) => {
   method: GET
 */
 module.exports.getOrderUser = async (req, res) => {
-  const userId = req.params.userId;
+  const userId = req.userId;
 
   const orders = await Order.find({ user: userId })
     .populate({ path: "orderDetails", populate: "product" })

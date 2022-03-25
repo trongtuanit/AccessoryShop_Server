@@ -7,7 +7,7 @@ module.exports = (roles = []) => {
   }
 
   return (req, res, next) => {
-    if (roles.length && !roles.includes(req.user.role)) {
+    if (roles.length && !roles.includes(req.role)) {
       throw new ResponseError(403, "Forbidden");
     }
     next();
