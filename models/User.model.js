@@ -11,24 +11,26 @@ const userSchema = mongoose.Schema(
       required: [true, "Requires username"],
       unique: [true, "Duplicate username"],
       lowercase: true,
-      match: /^[a-zA-Z0-9]{8,}$/,
+      match: [/^[a-zA-Z0-9]{8,}$/, "Username is not valid"],
       trim: true,
     },
     password: {
       type: String,
       required: [true, "Requires password"],
+      match: [/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, "Password must minimum eight chars, at least one letter, one number"],
       select: false,
     },
     email: {
       type: String,
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Email does not match",
+        "Email is not valid",
       ],
     },
     phoneNumber: {
       type: String,
       trim: true,
+      match: [/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/, "Phone number is not valid"]
     },
     accountBalance: {
       type: Number,

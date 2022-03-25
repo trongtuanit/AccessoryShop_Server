@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const SendMail = require("../helpers/SendMail");
 const configuration = require("../configs/configuration");
 const User = require("../models/User.model");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
+const generatePassword = require("../helpers/PasswordGenerator");
 const ResponseError = require("../helpers/ResponseError");
-
 
 /*
   method: GET
@@ -41,7 +42,6 @@ module.exports.login = async (req, res) => {
   });
 };
 
-
 /*
   method: POST
   body: { name, username, password, email, phoneNumber }
@@ -61,11 +61,9 @@ module.exports.signUp = async (req, res, next) => {
   )
     return next(new ResponseError(400, "Missing information"));
 
-  // is email taken
   const emailTaken = await User.findOne({ email });
   if (emailTaken) return next(new ResponseError(400, "Email is taken"));
 
-  // is username taken
   const userExist = await User.findOne({ username });
   if (userExist) return next(new ResponseError(400, "Username is taken"));
 
@@ -76,6 +74,126 @@ module.exports.signUp = async (req, res, next) => {
     .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
 };
 
+/*
+  method: POST
+  body : { username, email }
+*/
+module.exports.resetPassword = async (req, res, next) => {
+  if (!email) {
+    return next(new ResponseError(400, "Empty email"));
+  }
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(new ResponseError(404, "Not found user with this email"));
+  }
+
+  const newPassword = generatePassword.getRandomPassword();
+  const message = `Here is your new password: ${newPassword}`;
+  try {
+    await SendMail({
+      email: email,
+      subject: "Quên mật khẩu",
+      message,
+    });
+
+    return res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
+  } catch (err) {
+    console.log(`Error send mail: ${err.message}`);
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json(
+        new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, Message.ERROR)
+      );
+  }
+};
+
+/*
+  method: PUT
+  params: userId
+  body: { fullname, phoneNumber, email, address, money = 0, }
+*/
+module.exports.updateInfomation = async (req, res, next) => {
+  const userId = req.params.userId;
+  const user = await User.findById(req.userId).select("-password");
+
+  if (!user) {
+    return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
+  }
+
+  const {
+    fullname = user.fullname,
+    phoneNumber = user.phoneNumber,
+    email = user.email,
+    address = user.address,
+    money = 0,
+  } = req.body;
+
+  if (email !== user.email) {
+    const userWithEmail = await User.findOne({ email });
+
+    if (userWithEmail)
+      return next(new ErrorResponse(400, "This email is taken"));
+  }
+
+  user.fullname = fullname;
+  user.phoneNumber = phoneNumber;
+  user.email = email;
+  user.address = address;
+  user.accountBalance = user.accountBalance + +money;
+
+  await user.save();
+
+  return res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
+};
+
+/*
+  method: POST
+  params: userId
+  body: { password, newPassword }
+*/
+module.exports.changePassword = async (req, res, next) => {
+  const { password, newPassword } = req.body;
+  const userId = req.params.userId;
+
+  if (!(password && newPassword && confirmPassword)) {
+    return next(
+      new ResponseError(HttpStatus.BAD_REQUEST, "Missing information")
+    );
+  }
+
+  if (password === newPassword) {
+    return next(
+      new ResponseError(
+        400,
+        "The new password must be different from the old password"
+      )
+    );
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
+  }
+  const passwordValid = await bcrypt.compare(password, user.password);
+
+  if (!passwordValid) {
+    return next(
+      new ResponseError(HttpStatus.BAD_REQUEST, "Incorrect password")
+    );
+  }
+  const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+  user.password = hashedPassword;
+  await user.save();
+
+  return res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
+};
 
 /*
   method: POST
