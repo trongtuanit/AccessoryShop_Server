@@ -1,5 +1,5 @@
 require("dotenv").config();
-const redisClient = require("../config/redis");
+const redisClient = require("../configs/redis");
 const jwt = require("jsonwebtoken");
 const ResponseError = require("./ResponseError");
 

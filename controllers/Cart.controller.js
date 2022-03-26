@@ -1,5 +1,5 @@
-const Cart = require("../models/Cart");
-const Product = require("../models/Product");
+const Cart = require("../models/Cart.model");
+const Product = require("../models/Product.model");
 const ResponseError = require("../helpers/ResponseError");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
 

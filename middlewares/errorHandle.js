@@ -29,7 +29,7 @@ module.exports = (err, req, res, next) => {
   }
 
   const statusCode = error.statusCode || 500;
-  const message = error.message || "Internal Server Error";
+  const message = "Server error handler return with message: " + (error.message || "Internal Server Error");
 
   res.status(statusCode).json(new ResponseEntity(statusCode, message));
 };

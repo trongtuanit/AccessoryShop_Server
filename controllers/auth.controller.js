@@ -7,7 +7,7 @@ const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
 const generatePassword = require("../helpers/PasswordGenerator");
 const GenerateRefreshToken = require("../helpers/GenerateRefreshToken");
 const ResponseError = require("../helpers/ResponseError");
-const redisClient = require("../config/redis");
+const redisClient = require("../configs/redis");
 
 /*
   method: GET
@@ -133,7 +133,7 @@ module.exports.resetPassword = async (req, res, next) => {
 
   const newPassword = generatePassword.getRandomPassword();
   user.password = newPassword;
-  await User.save(user);
+  await user.save();
   const message = `Here is your new password: ${newPassword}`;
 
   try {
@@ -280,7 +280,7 @@ module.exports.validateToken = async (req, res) => {
   path: .../token
   header require: accessToken 
 */
-module.exports.getAccessToken = (req, res, next) => {
+module.exports.getAccessToken = async (req, res, next) => {
   const userId = req.userId;
 
   const user = await User.findOne({ _id: userId });

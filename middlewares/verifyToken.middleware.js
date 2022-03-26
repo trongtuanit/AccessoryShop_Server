@@ -1,7 +1,7 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const ResponseError = require("../helpers/ResponseError");
-const redisClient = require("../config/redis");
+const redisClient = require("../configs/redis");
 
 const verifyAccessToken = (req, res, next) => {
   const authHeader = req.header("Authorization");

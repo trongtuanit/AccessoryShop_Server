@@ -1,7 +1,7 @@
 // const { ResponseEntity, HttpStatus } = require("../dto/dataResponse");
 const ResponseError = require("../helpers/ResponseError");
 
-module.exports.permission = (roles = []) => {
+const permission = (roles = []) => {
   if (typeof roles === "string") {
     roles = [roles];
   }
@@ -13,3 +13,5 @@ module.exports.permission = (roles = []) => {
     next();
   };
 };
+
+module.exports = permission;

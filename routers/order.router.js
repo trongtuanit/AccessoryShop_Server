@@ -1,6 +1,6 @@
 const express = require("express");
 const permission = require("../middlewares/role.middleware");
-const { verifyAccessToken } = require("../middlewares/verifyToken");
+const { verifyAccessToken } = require("../middlewares/verifyToken.middleware");
 const asyncMiddleware = require("../middlewares/async.middleware");
 const router = express.Router();
 const {

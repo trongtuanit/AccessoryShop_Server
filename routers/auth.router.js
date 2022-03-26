@@ -5,7 +5,7 @@ const {
   verifyAccessToken,
   verifyRefreshToken,
   verifyResetToken,
-} = require("../middlewares/verifyToken");
+} = require("../middlewares/verifyToken.middleware");
 const {
   signUp,
   login,

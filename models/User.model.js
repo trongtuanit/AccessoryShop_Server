@@ -1,9 +1,9 @@
 const configuration = require("../configs/configuration");
-
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const userSchema = mongoose.Schema(
+const userSchema = Schema(
   {
     name: String,
     username: {

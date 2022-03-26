@@ -1,11 +1,11 @@
 const ResponseError = require("../helpers/ResponseError");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
-const Order = require("../models/Order");
-const OrderDetail = require("../models/OrderDetail");
-const User = require("../models/User");
-const Cart = require("../models/Cart");
+const Order = require("../models/Order.model");
+const OrderDetail = require("../models/OrderDetail.model");
+const User = require("../models/User.model");
+const Cart = require("../models/Cart.model");
 const mongoose = require("mongoose");
-const Product = require("../models/Product");
+const Product = require("../models/Product.model");
 
 
 /*
