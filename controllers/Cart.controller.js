@@ -46,25 +46,46 @@ module.exports.addToCart = async (req, res, next) => {
   }
 };
 
-/* 
-  method: GET
-  params: userId
-*/
-module.exports.getCartByUserId = async (req, res, next) => {
+module.exports.getCount = async (req, res, next) => {
   const userId = req.userId;
 
-  const carts = await Cart.find({ user: userId }).popuplate("product");
+  const carts = await Cart.find({ user: userId });
 
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+    .json(ResponseEntity(HttpStatus(OK), Message.SUCCESS, carts.length));
 };
+
+/*  
+  method: GET
+  path: ../
+*/
+(module.exports.getAll = async (req, res, next) => {
+  const userId = req.userId;
+
+  const carts = await Cart.find({ user: userId }).populate("product");
+
+  res.json({ success: true, carts });
+}),
+  /* 
+  method: GET
+  params: userId
+*/
+  (module.exports.getCartByUserId = async (req, res, next) => {
+    const userId = req.userId;
+
+    const carts = await Cart.find({ user: userId }).popuplate("product");
+
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+  });
 
 /* 
   method: DELETE
   params: id
 */
-module.exports.deleteCartByUserIdAndId = async (req, res, next) => {
+module.exports.deleteCartById = async (req, res, next) => {
   const userId = req.userId;
   const id = req.params.id;
 
@@ -89,7 +110,7 @@ module.exports.deleteCartByUserIdAndId = async (req, res, next) => {
   body: { productId, quantity }
   method: PUT
 */
-module.exports.updateCartByUserId = async (req, res, next) => {
+module.exports.updateCart = async (req, res, next) => {
   const userId = req.userId;
   const { productId, quantity } = req.body;
 

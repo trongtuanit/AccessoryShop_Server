@@ -86,33 +86,34 @@ module.exports.getProductById = async (req, res) => {
 */
 module.exports.createNewProductWithImage = async (req, res, next) => {
   const product = new Product(req.body);
-  const file  = req.file;
+  const files  = req.files;
   
   if (!(product.name && product.price && product.stock ))
     return next(new ResponseError(400, "Missing information"));
 
-  if(file) {
-    if (isDenyMimeType(file.mimetype)) {
-      throw new ResponseError(400, "File type not allowed");
-    }
-    const fileName = randomFileName(file.originalname);
-    gracefulFs.writeFile(
-      path.join(__dirname, `../public/uploads/${fileName}`),
-      file.buffer,
-      { encoding: "utf-8" },
-      async (err) => {
-        if (err) {
-          // chỗ này không throw được nên phải dùng next vì function này là call back
-          return next(new ResponseError(500, "File cannot be written"));
-        }
-        product.image.push(`/uploads/${fileName}`);
-        const newProduct = await Product.create(product);
-        res.status(HttpStatus.CREATED).json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newProduct));
-      }
-    );
-  }
   const newProduct = await Product.create(product);
 
+  if(files.length) {
+    files.forEach(file => {
+      if (isDenyMimeType(file.mimetype)) {
+        throw new ResponseError(HttpStatus.BAD_REQUEST, "File type not allowed");
+      }
+      const fileName = randomFileName(file.originalname);
+      gracefulFs.writeFile(
+        path.join(__dirname, `../public/uploads/${fileName}`),
+        file.buffer,
+        { encoding: "utf-8" },
+        async (err) => {
+          if (err) {
+            // chỗ này không throw được nên phải dùng next vì function này là call back
+            return next(new ResponseError(500, "File cannot be written"));
+          }
+          newProduct.image.push(`/uploads/${fileName}`);
+        }
+      );
+    });
+  }
+  await Product.save(newProduct);
   res
     .status(HttpStatus.CREATED)
     .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newProduct));

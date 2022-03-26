@@ -132,14 +132,16 @@ module.exports.resetPassword = async (req, res, next) => {
   }
 
   const newPassword = generatePassword.getRandomPassword();
+  user.password = newPassword;
+  await User.save(user);
   const message = `Here is your new password: ${newPassword}`;
+
   try {
     await SendMail({
       email: email,
       subject: "Quên mật khẩu",
       message,
     });
-
     return res
       .status(HttpStatus.OK)
       .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
