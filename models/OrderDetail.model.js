@@ -35,4 +35,4 @@ OrderDetailSchema.virtual("amount").get(function () {
   return this.quantity * (this.price - this.price * (this.discount / 100));
 });
 
-module.exports = mongoose.model("Category", OrderDetailSchema, "Category");
+module.exports = mongoose.model("OrderDetail", OrderDetailSchema, "OrderDetail");

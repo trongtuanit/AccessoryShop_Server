@@ -11,13 +11,13 @@ const userSchema = Schema(
       required: [true, "Requires username"],
       unique: [true, "Duplicate username"],
       lowercase: true,
-      match: [/^[a-zA-Z0-9]{8,}$/, "Username is not valid"],
+      match: [/^[a-zA-Z0-9]{4,}$/, "Username must minimum four chars"],
       trim: true,
     },
     password: {
       type: String,
       required: [true, "Requires password"],
-      match: [/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, "Password must minimum eight chars, at least one letter, one number"],
+      match: [/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, "Password must minimum six chars, at least one letter, one number"],
       select: false,
     },
     email: {

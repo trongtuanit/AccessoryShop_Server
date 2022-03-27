@@ -3,6 +3,7 @@ const permission = require("../middlewares/role.middleware");
 const { verifyAccessToken } = require("../middlewares/verifyToken.middleware");
 const asyncMiddleware = require("../middlewares/async.middleware");
 const router = express.Router({ mergeParams: true });
+const multer = require("multer");
 const {
   createNewProduct,
   createNewProductWithImage,
