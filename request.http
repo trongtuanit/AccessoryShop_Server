@@ -1,0 +1,19 @@
+
+###  Login  body: { name, username, password, email, phoneNumber }
+POST http://localhost:3000/api/auth/sign-up
+Content-Type: application/json
+{
+  "name": "Vũ Tuấn",
+  "username": "tuanmc28",
+  "password": "Abcxyz123",
+  "email": "tuanmc2885@gmail.com",
+  "phoneNumber": "0961662222"
+}
+
+###
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+{
+  "username": "admin",
+  "password": "Dragonmc255",
+}

@@ -8,50 +8,54 @@ const generatePassword = require("../helpers/PasswordGenerator");
 const GenerateRefreshToken = require("../helpers/GenerateRefreshToken");
 const ResponseError = require("../helpers/ResponseError");
 const redisClient = require("../configs/redis");
-
+require("dotenv").config();
 /*
-  method: GET
+  method: POST
   path: /login
   body: { username, password }
 */
 module.exports.login = async (req, res) => {
-  const { username, password } = req.body;
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username }).select("+password");
 
-  const user = await User.findOne({ username }).select("+password");
+    if (!user) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json(new ResponseEntity(HttpStatus.BAD_REQUEST, "Invalid username"));
+    }
 
-  if (!user) {
-    return res
-      .status(HttpStatus.BAD_REQUEST)
-      .json(new ResponseEntity(HttpStatus.BAD_REQUEST, "Invalid username"));
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json(new ResponseEntity(HttpStatus.BAD_REQUEST, "Invalid password"));
+    }
+
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
+    );
+    const refreshToken = GenerateRefreshToken(user._id);
+
+    res.status(HttpStatus.OK).json({
+      accessToken,
+      refreshToken,
+      jwt: token,
+      userId: user._id,
+      username,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error });
   }
-
-  if (!bcrypt.compareSync(password, user.password)) {
-    return res
-      .status(HttpStatus.BAD_REQUEST)
-      .json(new ResponseEntity(HttpStatus.BAD_REQUEST, "Invalid password"));
-  }
-
-  const token = jwt.sign({ username }, configuration().JWT_SECRET, {
-    expiresIn: "7d",
-  });
-
-  const accessToken = jwt.sign(
-    { userId: user._id, role: user.role },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
-  );
-  const refreshToken = GenerateRefreshToken(user._id);
-
-  res.status(HttpStatus.OK).json({
-    accessToken,
-    refreshToken,
-    jwt: token,
-    userId: user._id,
-    username,
-    name: user.name,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-  });
 };
 
 /*
@@ -60,42 +64,40 @@ module.exports.login = async (req, res) => {
   body: { name, username, password, email, phoneNumber }
 */
 module.exports.signUp = async (req, res, next) => {
-  const user = new User(req.body);
+  try {
+    const user = new User(req.body);
+    const { name, username, password, email, phoneNumber } = req.body;
 
-  // check data
-  if (
-    !(
-      user.username &&
-      user.email &&
-      user.password &&
-      user.name &&
-      user.phoneNumber
-    )
-  )
-    return next(new ResponseError(400, "Missing information"));
+    // check data
+    if (!(username && email && password && name && phoneNumber))
+      return next(new ResponseError(400, "Missing information"));
 
-  const emailTaken = await User.findOne({ email });
-  if (emailTaken) return next(new ResponseError(400, "Email is taken"));
+    const emailTaken = await User.findOne({ email });
+    if (emailTaken) return next(new ResponseError(400, "Email is taken"));
 
-  const userExist = await User.findOne({ username });
-  if (userExist) return next(new ResponseError(400, "Username is taken"));
+    const userExist = await User.findOne({ username });
+    if (userExist) return next(new ResponseError(400, "Username is taken"));
 
-  const newUser = await user.save();
+    const newUser = await user.save();
 
-  const accessToken = jwt.sign(
-    { userId: user._id, role: user.role },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
-  );
-  const refreshToken = GenerateRefreshToken(user._id);
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
+    );
+    const refreshToken = GenerateRefreshToken(user._id);
 
-  res.status(HttpStatus.CREATED).json(
-    new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, {
-      accessToken,
-      refreshToken,
-      newUser,
-    })
-  );
+    res.status(HttpStatus.CREATED).json(
+      new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, {
+        accessToken,
+        refreshToken,
+        newUser,
+      })
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
+  }
 };
 
 /*
@@ -247,7 +249,7 @@ module.exports.changePassword = async (req, res, next) => {
 module.exports.validateToken = async (req, res) => {
   const token = req.body.jwt;
 
-  const user = jwt.verify(token, configuration().JWT_SECRET);
+  const user = jwt.verify(token, process.env.JWT_SECRET);
 
   const currentUser = await User.findOne({ username: user.username });
 
@@ -259,7 +261,7 @@ module.exports.validateToken = async (req, res) => {
 
   const newToken = jwt.sign(
     { username: currentUser.username },
-    configuration().JWT_SECRET,
+    process.env.JWT_SECRET,
     {
       expiresIn: "7d",
     }

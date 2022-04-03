@@ -7,17 +7,24 @@ const ResponseError = require("../helpers/ResponseError");
   method: GET
 */
 module.exports.getAllCategories = async (req, res) => {
-  const categories = await Category.find();
-  if (!categories.length) {
-    res
-      .status(HttpStatus.NOT_FOUND)
-      .json(
-        ResponseEntity(HttpStatus.NOT_FOUND, Message.NO_CONTENT, categories)
-      );
-  }
+  try {
+    const categories = await Category.find();
+  // if (!categories.length) {
+  //   res
+  //     .status(HttpStatus.NOT_FOUND)
+  //     .json(
+  //       ResponseEntity(HttpStatus.NOT_FOUND, Message.NO_CONTENT, categories)
+  //     );
+  // }
   res
-    .status(HttpStatus.Ok)
-    .json(ResponseEntity(HttpStatus.Ok, Message.SUCCESS, categories));
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, categories));
+  } catch (error) {
+    console.log(error);
+    res
+    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+    .json(new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, Message.ERROR, error));
+  }
 };
 
 /*
@@ -31,12 +38,12 @@ module.exports.getCategoryById = async (req, res) => {
   if (!category) {
     res
       .status(HttpStatus.NOT_FOUND)
-      .json(ResponseEntity(HttpStatus.NOT_FOUND, Message.NO_CONTENT, category));
+      .json(new ResponseEntity(HttpStatus.NOT_FOUND, Message.NO_CONTENT, category));
   }
 
   res
     .status(HttpStatus.Ok)
-    .json(ResponseEntity(HttpStatus.Ok, Message.SUCCESS, category));
+    .json(new ResponseEntity(HttpStatus.Ok, Message.SUCCESS, category));
 };
 
 /*
@@ -59,7 +66,7 @@ module.exports.editCategory = async (req, res, next) => {
 
   res
     .status(HttpStatus.OK)
-    .json(ResponseEntity(HttpStatus.OK, Message.SUCCESS, category));
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, category));
 };
 
 /*
@@ -69,12 +76,10 @@ module.exports.editCategory = async (req, res, next) => {
 module.exports.createCategory = async (req, res, next) => {
   const { name, description, thumbnail } = req.body;
   const existCategory = await Category.find({ name });
-  if (existCategory)
-    return next(new ResponseError(400, `Category ${name} is existed!`));
   const category = await Category.create({ name, description, thumbnail });
   res
     .status(HttpStatus.CREATED)
-    .json(ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, category));
+    .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, category));
 };
 
 /*
