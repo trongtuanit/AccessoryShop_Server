@@ -39,6 +39,14 @@ module.exports.getAllProducts = async (req, res) => {
     conditions.price.$lte = req.query.max_price;
   }
 
+    // max price
+  if (req.query.brand) {
+    if (!conditions.brand) {
+      conditions.brand = {};
+    }
+    conditions.brand = req.brand;
+  }
+
   // page, limit
   const page = +req.query.page || 1;
   const limit = +req.query.limit || 10;

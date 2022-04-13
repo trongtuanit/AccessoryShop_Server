@@ -13,6 +13,9 @@ const productSchema = mongoose.Schema({
     type: Number,
     min: 0,
   },
+  brand: {
+    type: String
+  },
   stock: {
     type: Number,
     min: 0,
