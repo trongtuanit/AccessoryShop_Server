@@ -147,7 +147,7 @@ module.exports.getOrderUser = async (req, res) => {
   const userId = req.userId;
 
   const orders = await Order.find({ user: userId })
-    .populate({ path: "orderDetails", populate: "product" })
+    .populate({ path: "orderDetail", populate: "product" })
     .populate("user");
 
   res
@@ -161,7 +161,7 @@ module.exports.getOrderUser = async (req, res) => {
 */
 module.exports.getAllOrders = async (req, res) => {
   const orders = await Order.find({})
-    .populate({ path: "orderDetails", populate: "product" })
+    .populate({ path: "orderDetail", populate: "product" })
     .populate("user");
 
   res
@@ -177,7 +177,7 @@ module.exports.getOrderById = async (req, res) => {
   const { orderId } = req.params;
 
   const order = await Order.findById(orderId)
-    .populate({ path: "orderDetails", populate: "product" })
+    .populate({ path: "orderDetail", populate: "product" })
     .populate("user");
 
   if (!order)

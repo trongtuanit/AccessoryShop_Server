@@ -4,6 +4,7 @@ const categoryRouter = require("./category.router");
 const feedbackRouter = require("./feedback.router");
 const orderRouter = require("./order.router");
 const productRouter = require("./product.router");
+const wishlistRouter = require("./wishlish.router")
 const errorHandle = require("../middlewares/errorHandle");
 
 module.exports = (app) => {
@@ -18,6 +19,8 @@ module.exports = (app) => {
   app.use("/api/order", orderRouter);
 
   app.use("/api/product", productRouter);
+
+  app.use("/api/wishlist", wishlistRouter);
 
   app.use(errorHandle);
 }

@@ -111,8 +111,8 @@ module.exports.getTop10Seller = async (req, res, next) => {
   params: productId
 */
 module.exports.getProductById = async (req, res) => {
-  const { productId } = req.params;
-  const product = await Product.findById(productId);
+  const { id } = req.params;
+  const product = await Product.findById(id);
 
   if (!product) {
     return res
@@ -120,7 +120,7 @@ module.exports.getProductById = async (req, res) => {
       .json(
         new ResponseEntity(
           HttpStatus.NOT_FOUND,
-          `Product not found by id: ${productId}`
+          `Product not found by id: ${id}`
         )
       );
   }

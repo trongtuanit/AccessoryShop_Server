@@ -9,13 +9,6 @@ const ResponseError = require("../helpers/ResponseError");
 module.exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find();
-  // if (!categories.length) {
-  //   res
-  //     .status(HttpStatus.NOT_FOUND)
-  //     .json(
-  //       ResponseEntity(HttpStatus.NOT_FOUND, Message.NO_CONTENT, categories)
-  //     );
-  // }
   res
     .status(HttpStatus.OK)
     .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, categories));
@@ -71,7 +64,7 @@ module.exports.editCategory = async (req, res, next) => {
 
 /*
   method: POST
-  body: { name, description, thumbnail }s
+  body: { name, description, thumbnail }
 */
 module.exports.createCategory = async (req, res, next) => {
   const { name, description, thumbnail } = req.body;
