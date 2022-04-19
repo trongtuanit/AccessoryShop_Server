@@ -17,7 +17,7 @@ router
   .route("/")
   .get(
     asyncMiddleware(verifyAccessToken),
-    // asyncMiddleware(permission("User")),
+    asyncMiddleware(permission("User")),
     asyncMiddleware(getCartByUserId)
   )
   .post(
@@ -27,7 +27,7 @@ router
   )
   .put(
     asyncMiddleware(verifyAccessToken),
-    permission("User"),
+   asyncMiddleware( permission("User")),
     asyncMiddleware(updateCarts)
   );
 

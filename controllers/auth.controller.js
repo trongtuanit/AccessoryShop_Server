@@ -78,6 +78,7 @@ module.exports.signUp = async (req, res, next) => {
     const userExist = await User.findOne({ username });
     if (userExist) return next(new ResponseError(400, "Username is taken"));
 
+    user.role = "User";
     const newUser = await user.save();
 
     const accessToken = jwt.sign(
