@@ -3,13 +3,18 @@ const Wishlist = require("../models/Wishlist.model");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
 
 module.exports.getWishListByUserId = async (req, res, next) => {
-  const wishlist = await Wishlist.find({ user: req.userId }).populate(
-    "product"
-  );
+  try {
+    const wishlist = await Wishlist.find({ user: req.userId }).populate(
+      "product"
+    );
 
-  res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, wishlist));
+    console.log("wishlist api called!");
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, wishlist));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 module.exports.createWishlist = async (req, res, next) => {

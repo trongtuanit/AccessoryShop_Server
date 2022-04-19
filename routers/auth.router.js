@@ -17,13 +17,14 @@ const {
   getAccessToken,
   confirmToken,
 } = require("../controllers/auth.controller");
+const permission = require("../middlewares/role.middleware");
 
 router
   .route("/")
   .get(asyncMiddleware(verifyAccessToken), asyncMiddleware(confirmToken));
 router
   .route("/")
-  .put(asyncMiddleware(verifyAccessToken), asyncMiddleware(updateInfomation));
+  .put(asyncMiddleware(verifyAccessToken), asyncMiddleware(permission("User")), asyncMiddleware(updateInfomation));
 router
   .route("/password")
   .put(asyncMiddleware(verifyAccessToken), asyncMiddleware(changePassword));

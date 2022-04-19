@@ -5,7 +5,6 @@ const permission = (roles = []) => {
   if (typeof roles === "string") {
     roles = [roles];
   }
-
   return (req, res, next) => {
     if (roles.length && !roles.includes(req.role)) {
       throw new ResponseError(403, "Forbidden");

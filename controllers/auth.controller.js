@@ -69,7 +69,7 @@ module.exports.signUp = async (req, res, next) => {
     const { name, username, password, email, phoneNumber } = req.body;
 
     // check data
-    if (!(username && email && password && name && phoneNumber))
+    if (!(username && email && password ))
       return next(new ResponseError(400, "Missing information"));
 
     const emailTaken = await User.findOne({ email });
@@ -170,11 +170,11 @@ module.exports.updateInfomation = async (req, res, next) => {
   }
 
   const {
-    fullname = user.fullname,
+    name = user.name,
     phoneNumber = user.phoneNumber,
     email = user.email,
     address = user.address,
-    money = 0,
+    money ,
   } = req.body;
 
   if (email !== user.email) {
@@ -183,7 +183,7 @@ module.exports.updateInfomation = async (req, res, next) => {
       return next(new ResponseError(400, "This email is taken"));
   }
 
-  user.fullname = fullname;
+  user.name = name;
   user.phoneNumber = phoneNumber;
   user.email = email;
   user.address = address;
@@ -311,17 +311,22 @@ module.exports.getAccessToken = async (req, res, next) => {
   path: .../logout
 */
 module.exports.logout = async (req, res, next) => {
-  const userId = req.userId;
+  try {
+    const userId = req.userId;
 
-  const user = await User.findOne({ _id: userId }).select("-password");
+    const user = await User.findOne({ _id: userId }).select("-password");
 
-  // Check for existing user
-  if (!user) {
-    return next(new ResponseError(404, "User not exist"));
+    // Check for existing user
+    if (!user) {
+      return next(new ResponseError(404, "User not exist"));
+    }
+
+    await redisClient.del(userId.toString());
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
+    console.log("success");
+  } catch (error) {
+    console.log(error);
   }
-
-  await redisClient.del(userId.toString());
-  res
-    .status(HttpStatus.OK)
-    .json(ResponseEntity(HttpStatus.OK, Message.SUCCESS));
 };

@@ -46,40 +46,51 @@ module.exports.addToCart = async (req, res, next) => {
   }
 };
 
+
+/*  
+  method: GET
+  path: ../count
+*/
 module.exports.getCount = async (req, res, next) => {
-  const userId = req.userId;
+  try {
+    const userId = req.userId;
 
-  const carts = await Cart.find({ user: userId });
-
-  res
-    .status(HttpStatus.OK)
-    .json(ResponseEntity(HttpStatus(OK), Message.SUCCESS, carts.length));
+    const carts = await Cart.find({ user: userId });
+    // console.log("get count cart called!");
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts.length));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 /*  
   method: GET
   path: ../
 */
-(module.exports.getAll = async (req, res, next) => {
+module.exports.getAll = async (req, res, next) => {
   const userId = req.userId;
 
   const carts = await Cart.find({ user: userId }).populate("product");
 
-  res.json({ success: true, carts });
-}),
+  res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+},
   /* 
   method: GET
   params: userId
 */
-  (module.exports.getCartByUserId = async (req, res, next) => {
-    const userId = req.userId;
+module.exports.getCartByUserId = async (req, res, next) => {
+  const userId = req.userId;
 
-    const carts = await Cart.find({ user: userId }).popuplate("product");
+  const carts = await Cart.find({ user: userId }).popuplate("product");
 
-    res
-      .status(HttpStatus.OK)
-      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
-  });
+  res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+};
 
 /* 
   method: DELETE

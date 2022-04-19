@@ -17,8 +17,8 @@ router
   .route("/")
   .get(
     asyncMiddleware(verifyAccessToken),
-    asyncMiddleware(permission("User")),
-    asyncMiddleware(getAll)
+    // asyncMiddleware(permission("User")),
+    asyncMiddleware(getCartByUserId)
   )
   .post(
     asyncMiddleware(verifyAccessToken),
@@ -35,7 +35,7 @@ router
   .route("/count")
   .get(
     asyncMiddleware(verifyAccessToken),
-    asyncMiddleware(permission("User")),
+    // asyncMiddleware(permission("User")),
     asyncMiddleware(getCount)
   );
 

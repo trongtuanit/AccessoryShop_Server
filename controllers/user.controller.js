@@ -70,34 +70,34 @@ module.exports.getUserByUsername = async (req, res) => {
   body: { username, password, email, name, phoneNumber, address }
 */
 module.exports.createNewUser = async (req, res, next) => {
-  const user = new User(req.body);
+  try {
+    const user = new User(req.body);
 
-  // check data
-  if (
-    !(
-      user.username &&
-      user.email &&
-      user.password &&
-      user.name &&
-      user.phoneNumber
+    if (
+      !(
+        user.username &&
+        user.email &&
+        user.password
+      )
     )
-  )
-    return next(new ResponseError(400, "Missing information"));
+      return next(new ResponseError(400, "Missing information"));
 
-  // is email taken
-  const emailTaken = await User.findOne({ email });
-  if (emailTaken) return next(new ResponseError(400, "Email is taken"));
+    // is email taken
+    const emailTaken = await User.findOne({ email });
+    if (emailTaken) return next(new ResponseError(400, "Email is taken"));
 
-  // is username taken
-  const userExist = await User.findOne({ username });
-  if (userExist) return next(new ResponseError(400, "Username is taken"));
+    // is username taken
+    const userExist = await User.findOne({ username });
+    if (userExist) return next(new ResponseError(400, "Username is taken"));
 
-  const newUser = await user.save();
-  res
-    .status(HttpStatus.CREATED)
-    .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
+    const newUser = await user.save();
+    res
+      .status(HttpStatus.CREATED)
+      .json(new ResponseEntity(HttpStatus.CREATED, Message.SUCCESS, newUser));
+  } catch (error) {
+    console.log(error);
+  }
 };
-
 
 /*
   method: PUT
