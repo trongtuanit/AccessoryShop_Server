@@ -8,8 +8,8 @@ const OrderSchema = mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      match: /^[0][0-9]{9}$/,
-      required: [true, "Requires phone number "],
+      match: /^[0][0-9]{9,}$/,
+      required: [true, "Requires phone number"],
     },
     amount: {
       type: Number,
@@ -28,11 +28,14 @@ const OrderSchema = mongoose.Schema(
   }
 );
 
-OrderSchema.virtual("orderDetail", {
-  ref: "OderDetail",
+OrderSchema.virtual("OrderDetail", {
+  ref: "OrderDetail",
   localField: "_id",
   foreignField: "order",
   justOne: false,
 });
+
+OrderSchema.set('toJSON', {virtuals: true});
+OrderSchema.set('toObject', {virtuals: true});
 
 module.exports = mongoose.model("Order", OrderSchema, "Order");

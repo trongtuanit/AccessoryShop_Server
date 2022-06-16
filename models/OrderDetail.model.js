@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+
 const OrderDetailSchema = mongoose.Schema(
   {
     discount: {
@@ -35,4 +36,8 @@ OrderDetailSchema.virtual("amount").get(function () {
   return this.quantity * (this.price - this.price * (this.discount / 100));
 });
 
-module.exports = mongoose.model("OrderDetail", OrderDetailSchema, "OrderDetail");
+module.exports = mongoose.model(
+  "OrderDetail",
+  OrderDetailSchema,
+  "OrderDetail"
+);

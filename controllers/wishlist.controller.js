@@ -8,7 +8,7 @@ module.exports.getWishListByUserId = async (req, res, next) => {
       "product"
     );
 
-    console.log("wishlist api called!");
+    // console.log("wishlist api called!");
     res
       .status(HttpStatus.OK)
       .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, wishlist));
@@ -18,13 +18,18 @@ module.exports.getWishListByUserId = async (req, res, next) => {
 };
 
 module.exports.createWishlist = async (req, res, next) => {
-  const wishlist = await Wishlist.find({ user: req.userId }).populate(
-    "product"
-  );
-
-  res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, wishlist));
+  const userId = req.userId;
+  try {
+    const wishlist = await Wishlist.create({
+      ...req.body,
+      userId,
+    });
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, wishlist));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 module.exports.updateWishListById = async (req, res, next) => {

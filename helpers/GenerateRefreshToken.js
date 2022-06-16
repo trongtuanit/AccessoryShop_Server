@@ -11,7 +11,7 @@ const generateRefreshToken = (userId) => {
   redisClient.set(userId.toString(), refreshToken, function (error) {
     if (error) return next(new ResponseError(400, error.message));
 
-    console.log("Stored refresh token");
+    // console.log("Stored refresh token");
   });
 
   return refreshToken;

@@ -8,44 +8,49 @@ const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
   body: { productId, quantity } 
 */
 module.exports.addToCart = async (req, res, next) => {
-  const userId = req.userId;
-  const { productId, quantity } = req.body;
+  try {
+    const userId = req.userId;
+    const { productId, quantity } = req.body;
 
-  if (!(productId && quantity)) {
-    return next(new ResponseError(400, "Lack of information"));
-  }
+    if (!(productId && quantity)) {
+      return next(new ResponseError(400, "Lack of information"));
+    }
 
-  // Check for existing product
-  const product = await Product.findOne({ _id: productId });
+    if(quantity === 0) {
+      return next(new ResponseError(400, "Quantity must bigger than 0"));
+    }
 
-  if (!product) {
-    return next(new ResponseError(404, "Not found product"));
-  }
+    // Check for existing product
+    const product = await Product.findOne({ _id: productId });
 
-  const cart = await Cart.findOne({ user: userId, product: productId });
+    if (!product) {
+      return next(new ResponseError(404, "Not found product"));
+    }
 
-  if (cart) {
-    cart.quantity += quantity;
-    await cart.save();
+    const cart = await Cart.findOne({ user: userId, product: productId });
 
-    res.json({
-      success: true,
-      message: "The product has been added to cart",
-      cart,
-    });
-  } else {
-    const newCart = await Cart.create({
-      user: userId,
-      product: productId,
-      quantity,
-    });
+    if (cart) {
+      cart.quantity += quantity;
+      await cart.save();
 
-    res
-      .status(HttpStatus.OK)
-      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, newCart));
+      res
+        .status(HttpStatus.OK)
+        .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, cart));
+    } else {
+      const newCart = await Cart.create({
+        user: userId,
+        product: productId,
+        quantity,
+      });
+
+      res
+        .status(HttpStatus.OK)
+        .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, newCart));
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
-
 
 /*  
   method: GET
@@ -77,19 +82,24 @@ module.exports.getAll = async (req, res, next) => {
   res
     .status(HttpStatus.OK)
     .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
-},
-  /* 
+};
+/* 
   method: GET
   params: userId
 */
 module.exports.getCartByUserId = async (req, res, next) => {
-  const userId = req.userId;
+  try {
+    // console.log("get cart by user id called");
+    const userId = req.userId;
 
-  const carts = await Cart.find({ user: userId }).popuplate("product");
+    const carts = await Cart.find({ user: userId }).populate('product');
 
-  res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, carts));
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 /* 

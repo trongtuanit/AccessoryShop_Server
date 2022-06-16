@@ -14,13 +14,11 @@ app.use(helmet.xssFilter());
 app.use(helmet.hidePoweredBy());
 
 connectDB();
-
+require("./models/OrderDetail.model");
 const router = require("./routers");
-
 router(app);
 
 const PORT = process.env.PORT || 3000;
-
 
 app.listen(PORT, async () => {
   const countUser = await User.countDocuments({});

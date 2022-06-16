@@ -69,7 +69,7 @@ module.exports.signUp = async (req, res, next) => {
     const { name, username, password, email, phoneNumber } = req.body;
 
     // check data
-    if (!(username && email && password ))
+    if (!(username && email && password))
       return next(new ResponseError(400, "Missing information"));
 
     const emailTaken = await User.findOne({ email });
@@ -164,37 +164,38 @@ module.exports.resetPassword = async (req, res, next) => {
   body: { fullname, phoneNumber, email, address, money = 0, }
 */
 module.exports.updateInfomation = async (req, res, next) => {
-  const user = await User.findById(req.userId).select("-password");
+  try {
+    const user = await User.findById(req.userId).select("-password");
 
-  if (!user) {
-    return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
+    if (!user) {
+      return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
+    }
+
+    let { name, phoneNumber, email, address, money } = req.body;
+
+    if (email !== user.email) {
+      const userWithEmail = await User.findOne({ email });
+      if (userWithEmail)
+        return next(new ResponseError(400, "This email is taken"));
+    }
+    if (!money) {
+      money = 0;
+    }
+
+    user.name = name;
+    user.phoneNumber = phoneNumber;
+    user.email = email;
+    user.address = address;
+    user.accountBalance = user.accountBalance + +money;
+
+    await user.save();
+
+    return res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
+  } catch (error) {
+    console.log(error);
   }
-
-  const {
-    name = user.name,
-    phoneNumber = user.phoneNumber,
-    email = user.email,
-    address = user.address,
-    money ,
-  } = req.body;
-
-  if (email !== user.email) {
-    const userWithEmail = await User.findOne({ email });
-    if (userWithEmail)
-      return next(new ResponseError(400, "This email is taken"));
-  }
-
-  user.name = name;
-  user.phoneNumber = phoneNumber;
-  user.email = email;
-  user.address = address;
-  user.accountBalance = user.accountBalance + +money;
-
-  await user.save();
-
-  return res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, user));
 };
 
 /*
@@ -203,42 +204,47 @@ module.exports.updateInfomation = async (req, res, next) => {
   body: { password, newPassword }
 */
 module.exports.changePassword = async (req, res, next) => {
-  const { password, newPassword } = req.body;
-  const userId = req.params.userId;
+  try {
+    const { password, newPassword, confirmPassword } = req.body;
+    const userId = req.userId;
+    if (!(password && newPassword && confirmPassword)) {
+      return next(
+        new ResponseError(HttpStatus.BAD_REQUEST, "Missing information")
+      );
+    }
 
-  if (!(password && newPassword && confirmPassword)) {
-    return next(
-      new ResponseError(HttpStatus.BAD_REQUEST, "Missing information")
-    );
+    if (password === newPassword) {
+      return next(
+        new ResponseError(
+          400,
+          "The new password must be different from the old password"
+        )
+      );
+    }
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      console.log("Not found user with id " + userId);
+    }
+    if (!user) {
+      return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
+    }
+    const passwordValid = await bcrypt.compare(password, user.password);
+
+    if (!passwordValid) {
+      return next(
+        new ResponseError(HttpStatus.BAD_REQUEST, "Incorrect password")
+      );
+    }
+    // const hashedPassword = await bcrypt.hash(newPassword, process.env.SALT_ROUNDS);
+    user.password = newPassword;
+    await user.save();
+
+    return res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
+  } catch (error) {
+    console.log(error);
   }
-
-  if (password === newPassword) {
-    return next(
-      new ResponseError(
-        400,
-        "The new password must be different from the old password"
-      )
-    );
-  }
-
-  const user = await User.findById(userId);
-  if (!user) {
-    return next(new ResponseError(HttpStatus.NOT_FOUND, "User not exist"));
-  }
-  const passwordValid = await bcrypt.compare(password, user.password);
-
-  if (!passwordValid) {
-    return next(
-      new ResponseError(HttpStatus.BAD_REQUEST, "Incorrect password")
-    );
-  }
-  const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-  user.password = hashedPassword;
-  await user.save();
-
-  return res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
 };
 
 /*
@@ -326,7 +332,7 @@ module.exports.logout = async (req, res, next) => {
     res
       .status(HttpStatus.OK)
       .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS));
-    console.log("success");
+    // console.log("success");
   } catch (error) {
     console.log(error);
   }

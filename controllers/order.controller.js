@@ -1,12 +1,11 @@
+const mongoose = require("mongoose");
 const ResponseError = require("../helpers/ResponseError");
 const { HttpStatus, ResponseEntity, Message } = require("../dto/dataResponse");
-const Order = require("../models/Order.model");
 const OrderDetail = require("../models/OrderDetail.model");
+const Order = require("../models/Order.model");
 const User = require("../models/User.model");
 const Cart = require("../models/Cart.model");
-const mongoose = require("mongoose");
 const Product = require("../models/Product.model");
-
 
 /*
   method: GET
@@ -138,35 +137,44 @@ module.exports.addOrder = async (req, res, next) => {
   }
 };
 
-
 /*
-  params: userId
   method: GET
 */
-module.exports.getOrderUser = async (req, res) => {
-  const userId = req.userId;
+module.exports.getOrderUser = async (req, res, next) => {
+  try {
+    const userId = req.userId;
 
-  const orders = await Order.find({ user: userId })
-    .populate({ path: "orderDetail", populate: "product" })
-    .populate("user");
-
-  res
-    .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK), Message.SUCCESS, orders);
+    const orders = await Order.find({ user: userId })
+      .populate({
+        path: "OrderDetail",
+        model: "OrderDetail",
+        options: { strictPopulate: false },
+        populate: { path: "product", model: "Product" },
+      })
+      .populate("user");
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, orders));
+  } catch (error) {
+    console.log(error);
+  }
 };
-
-
 /*
   method: GET
 */
 module.exports.getAllOrders = async (req, res) => {
   const orders = await Order.find({})
-    .populate({ path: "orderDetail", populate: "product" })
+    .populate({
+      path: "OrderDetail",
+      model: "OrderDetail",
+      options: { strictPopulate: false },
+      populate: { path: "product", model: "Product" },
+    })
     .populate("user");
 
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK), Message.SUCCESS, orders);
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, orders));
 };
 
 /*
@@ -174,16 +182,44 @@ module.exports.getAllOrders = async (req, res) => {
   params: orderId
 */
 module.exports.getOrderById = async (req, res) => {
-  const { orderId } = req.params;
+  try {
+    const orderId = req.params.id;
 
-  const order = await Order.findById(orderId)
-    .populate({ path: "orderDetail", populate: "product" })
-    .populate("user");
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "OrderDetail",
+        model: "OrderDetail",
+        options: { strictPopulate: false },
+        populate: { path: "product", model: "Product" },
+      })
+      .populate("user");
 
-  if (!order)
+    if (!order)
+      return next(new ResponseError(HttpStatus.NOT_FOUND, "Not found order"));
+
+    console.log(order);
+    res
+      .status(HttpStatus.OK)
+      .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, order));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+/*
+  method: GET
+  params: orderId
+*/
+module.exports.getOrderDetailById = async (req, res) => {
+  console.log("get order detail called");
+  const { orderDetailId } = req.params;
+
+  const orderDetail = await OrderDetail.findById(orderDetailId);
+
+  if (!orderDetail)
     return next(new ResponseError(HttpStatus.NOT_FOUND, "Not found order"));
 
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK), Message.SUCCESS, order);
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, orderDetail));
 };

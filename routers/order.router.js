@@ -8,6 +8,7 @@ const {
   getAllOrders,
   getOrderById,
   getOrderUser,
+  getOrderDetailById
 } = require("../controllers/order.controller");
 
 router.get(
@@ -18,11 +19,19 @@ router.get(
 );
 
 router.get(
-  "/user",
+  "order-detail/:id",
+  asyncMiddleware(verifyAccessToken),
+  asyncMiddleware(permission("User")),
+  asyncMiddleware(getOrderDetailById)
+);
+
+router.get(
+  "/",
   asyncMiddleware(verifyAccessToken),
   asyncMiddleware(permission("User")),
   asyncMiddleware(getOrderUser)
 );
+
 router.get(
   "/admin",
   asyncMiddleware(verifyAccessToken),

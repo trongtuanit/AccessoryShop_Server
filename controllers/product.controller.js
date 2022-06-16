@@ -1,4 +1,5 @@
 const Product = require("../models/Product.model");
+const Category = require("../models/Category.model");
 const path = require("path");
 const gracefulFs = require("graceful-fs");
 const ResponseError = require("../helpers/ResponseError");
@@ -39,7 +40,7 @@ module.exports.getAllProducts = async (req, res) => {
     conditions.price.$lte = req.query.max_price;
   }
 
-    // max price
+  // max price
   if (req.query.brand) {
     if (!conditions.brand) {
       conditions.brand = {};
@@ -58,7 +59,13 @@ module.exports.getAllProducts = async (req, res) => {
 
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, {totalProduct: total, totalPage, products}));
+    .json(
+      new ResponseEntity(HttpStatus.OK, Message.SUCCESS, {
+        totalProduct: total,
+        totalPage,
+        products,
+      })
+    );
 };
 
 /*
@@ -67,7 +74,7 @@ module.exports.getAllProducts = async (req, res) => {
 */
 module.exports.getAllSortedProducts = async (req, res, next) => {
   const condition = {};
-  
+
   switch (req.query.sort) {
     case "HIGH_PRICE":
       condition.sold = "desc";
@@ -76,10 +83,10 @@ module.exports.getAllSortedProducts = async (req, res, next) => {
       condition.sold = "asc";
       break;
     case "HIGHEST_DISCOUNT":
-      condition.discount = "desc"
+      condition.discount = "desc";
       break;
-    case "TOP_SELLERS": 
-      condition.sold = "desc"
+    case "TOP_SELLERS":
+      condition.sold = "desc";
       break;
     default:
       break;
@@ -90,10 +97,19 @@ module.exports.getAllSortedProducts = async (req, res, next) => {
   const total = await Product.countDocuments({});
   const totalPage = Math.ceil(total / limit);
 
-  const products = await Product.find().sort(condition).skip(startIndex).limit(limit);
+  const products = await Product.find()
+    .sort(condition)
+    .skip(startIndex)
+    .limit(limit);
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, {totalProduct: total, totalPage, products}));
+    .json(
+      new ResponseEntity(HttpStatus.OK, Message.SUCCESS, {
+        totalProduct: total,
+        totalPage,
+        products,
+      })
+    );
 };
 
 /*
@@ -124,10 +140,40 @@ module.exports.getProductById = async (req, res) => {
         )
       );
   }
+  const category = await Category.findById(product.category);
+  const categoryName = category.name;
+  // console.log(categoryName)
+  // console.log(returnProduct);
+  const returnProduct = { ...product._doc, categoryName };
+  res
+    .status(HttpStatus.OK)
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, returnProduct));
+};
+
+module.exports.getProductByCategory = async (req, res) => {
+  const { id } = req.params;
+  const category = await Category.findById(id);
+
+  if (!category) {
+    return res
+      .status(HttpStatus.NOT_FOUND)
+      .json(
+        new ResponseEntity(
+          HttpStatus.NOT_FOUND,
+          `Category not found by id: ${id}`
+        )
+      );
+  }
+  const products = await Product.find({ category: id });
+  if (!products.length) {
+    return res
+      .status(HttpStatus.NO_CONTENT)
+      .json(new ResponseEntity(HttpStatus.NO_CONTENT, `Empty `));
+  }
 
   res
     .status(HttpStatus.OK)
-    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, product));
+    .json(new ResponseEntity(HttpStatus.OK, Message.SUCCESS, products));
 };
 
 /*

@@ -13,6 +13,10 @@ const productSchema = mongoose.Schema({
     type: Number,
     min: 0,
   },
+  evaluation: {
+    type: Number,
+    default: 0,
+  },
   brand: {
     type: String
   },
